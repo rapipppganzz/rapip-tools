@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rapipp Tools | Auto Trace Engine</title>
+    <title>Rapipp Tools | Auto Trace to Alight Motion</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Real Vectorization Engine -->
+    <!-- Real Client-Side Vectorization Engine -->
     <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 
     <style>
@@ -29,8 +29,8 @@
         body {
             background-color: var(--bg-base);
             background-image: 
-                radial-gradient(circle at 10% 10%, rgba(123, 44, 191, 0.1), transparent 30%),
-                radial-gradient(circle at 90% 90%, rgba(76, 201, 240, 0.1), transparent 30%);
+                radial-gradient(circle at 10% 10%, rgba(123, 44, 191, 0.15), transparent 35%),
+                radial-gradient(circle at 90% 90%, rgba(76, 201, 240, 0.15), transparent 35%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -41,11 +41,11 @@
         /* Glass Utilities */
         .glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
 
         header {
@@ -62,7 +62,7 @@
         }
 
         .logo {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 700;
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             -webkit-background-clip: text;
@@ -237,12 +237,35 @@
             transition: opacity 0.3s;
         }
 
-        /* Side-by-side mode */
-        .viewer.sbs { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        /* Mode Layouts */
+        .viewer.sbs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .viewer.sbs > div { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         .viewer.sbs img, .viewer.sbs svg { position: relative; }
 
-        /* Actions Box */
+        /* Code & Export Panel */
+        .xml-preview-container {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            padding: 16px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .xml-preview-container textarea {
+            width: 100%;
+            height: 150px;
+            background: transparent;
+            color: #a9b7c6;
+            border: none;
+            resize: none;
+            font-family: monospace;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
         .export-panel {
             display: flex;
             gap: 16px;
@@ -252,6 +275,7 @@
             border: 1px solid var(--glass-border);
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -281,7 +305,10 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             border-radius: 16px; border: 2px dashed var(--accent-primary);
             cursor: pointer;
+            transition: 0.3s;
         }
+
+        #upload-overlay:hover { background: rgba(15,15,25,0.9); }
 
         .status-pill {
             padding: 8px 16px;
@@ -291,8 +318,8 @@
             display: flex; align-items: center; gap: 8px;
         }
 
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: #4cc9f0; }
-        .processing .dot { animation: pulse 1s infinite; background: #ffaa00; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #4cc9f0; box-shadow: 0 0 10px #4cc9f0; }
+        .processing .dot { animation: pulse 1s infinite; background: #ffaa00; box-shadow: 0 0 10px #ffaa00; }
 
         @keyframes pulse { 0% {transform:scale(1);opacity:1;} 50% {transform:scale(1.5);opacity:0.5;} 100% {transform:scale(1);opacity:1;} }
         
@@ -312,10 +339,10 @@
 
     <div class="workspace">
         
-        <!-- Auto Trace Engine Controls -->
+        <!-- Controls -->
         <aside class="controls-sidebar glass">
             <h3 style="margin-bottom: 5px; font-size: 1.1rem;">Auto Trace Engine</h3>
-            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 10px;">Adjust parameters to isolate the subject.</p>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 10px;">Extract precise geometry for Alight Motion.</p>
 
             <div class="control-group">
                 <div class="control-header"><span>Threshold</span> <span id="val-thresh">128</span></div>
@@ -337,18 +364,13 @@
             </div>
 
             <div class="control-group">
-                <div class="control-header"><span>Simplification</span> <span id="val-simp">50</span></div>
+                <div class="control-header"><span>Path Simplification</span> <span id="val-simp">50</span></div>
                 <input type="range" id="ctrl-simp" min="0" max="100" value="50">
             </div>
 
             <label class="toggle-group">
                 <span>Invert Mask</span>
                 <div><input type="checkbox" id="ctrl-invert"><div class="toggle-switch"></div></div>
-            </label>
-
-            <label class="toggle-group">
-                <span>Remove Small Objects</span>
-                <div><input type="checkbox" id="ctrl-rmsmall" checked><div class="toggle-switch"></div></div>
             </label>
 
             <label class="toggle-group">
@@ -359,57 +381,69 @@
             <button class="btn btn-secondary" style="justify-content: center; margin-top: 10px;" onclick="document.getElementById('file-upload').click()">
                 <i class="fa-solid fa-image"></i> Change Image
             </button>
-            <input type="file" id="file-upload" accept="image/*" style="display:none;">
+            <input type="file" id="file-upload" accept="image/png, image/jpeg, image/webp" style="display:none;">
         </aside>
 
         <!-- Preview & Output -->
         <main class="preview-area">
             <div class="tabs">
                 <div class="tab active" data-mode="sbs">Side-by-Side</div>
-                <div class="tab" data-mode="overlay">Overlay</div>
-                <div class="tab" data-mode="mask">Binary Mask</div>
+                <div class="tab" data-mode="overlay">Vector Overlay</div>
+                <div class="tab" data-mode="xml">XML Data</div>
             </div>
 
             <div class="canvas-container glass" id="drop-zone">
                 <div id="upload-overlay">
                     <i class="fa-solid fa-cloud-arrow-up" style="font-size: 3rem; color: var(--accent-primary); margin-bottom: 15px;"></i>
-                    <h2>Drop Image to Trace</h2>
-                    <p style="color: var(--text-muted); margin-top: 5px;">PNG, JPG, WebP</p>
+                    <h2>Drop Image to Auto Trace</h2>
+                    <p style="color: var(--text-muted); margin-top: 5px;">Supports PNG, JPG, WebP</p>
                 </div>
                 
                 <div class="viewer sbs" id="viewer">
+                    <!-- Original Full Color Image -->
                     <div id="view-orig"><img id="img-original" src="" style="display:none;"></div>
+                    
                     <div id="view-result">
-                        <!-- Canvas for Binary Mask preview -->
+                        <!-- Canvas used internally for binary processing -->
                         <canvas id="canvas-mask" style="display:none;"></canvas>
                         <!-- SVG Output container -->
                         <div id="svg-container" style="width:100%; height:100%; display:flex; justify-content:center; align-items:center;"></div>
                     </div>
                 </div>
+
+                <!-- XML Preview Container -->
+                <div class="xml-preview-container" id="xml-preview-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; color: var(--text-main);">Alight Motion XML Preview</span>
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="copyXML()">
+                            <i class="fa-solid fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <textarea id="xml-output" readonly></textarea>
+                </div>
             </div>
 
             <div class="export-panel glass">
                 <div>
-                    <h3 style="margin-bottom: 5px;">Alight Motion Ready</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted);">Real geometric paths. No fake base64 data.</p>
+                    <h3 style="margin-bottom: 5px;">Export Alight Motion Project</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Strict AM 5.0 format. Vector paths generated from silhouette.</p>
                 </div>
-                <div style="display: flex; gap: 12px;">
-                    <button class="btn btn-secondary" onclick="downloadSVG()"><i class="fa-solid fa-vector-square"></i> SVG</button>
-                    <button class="btn btn-primary" onclick="downloadXML()"><i class="fa-solid fa-code"></i> AM XML</button>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="downloadSVG()"><i class="fa-solid fa-vector-square"></i> Download SVG</button>
+                    <button class="btn btn-primary" onclick="downloadXML()"><i class="fa-solid fa-code"></i> Download XML</button>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
-        // DOM Elements
+        // DOM Bindings
         const DOM = {
             thresh: document.getElementById('ctrl-thresh'), valThresh: document.getElementById('val-thresh'),
             detail: document.getElementById('ctrl-detail'),
             smooth: document.getElementById('ctrl-smooth'), valSmooth: document.getElementById('val-smooth'),
             simp: document.getElementById('ctrl-simp'), valSimp: document.getElementById('val-simp'),
             invert: document.getElementById('ctrl-invert'),
-            rmsmall: document.getElementById('ctrl-rmsmall'),
             holes: document.getElementById('ctrl-holes'),
             upload: document.getElementById('file-upload'),
             dropZone: document.getElementById('drop-zone'),
@@ -419,28 +453,29 @@
             svgCont: document.getElementById('svg-container'),
             viewer: document.getElementById('viewer'),
             tabs: document.querySelectorAll('.tab'),
+            xmlBox: document.getElementById('xml-preview-box'),
+            xmlOutput: document.getElementById('xml-output'),
             statusPill: document.getElementById('status-pill'),
             statusText: document.getElementById('status-text')
         };
 
-        // State
+        // State Variables
         let sourceImage = null;
-        let generatedSVGPath = "";
-        let finalXMLData = "";
-        let finalSVGData = "";
         let originalWidth = 0;
         let originalHeight = 0;
         let viewMode = 'sbs';
         let processTimeout = null;
+        
+        let finalXMLString = "";
+        let finalSVGString = "";
 
-        // UI Event Listeners
+        // UI Listeners
         DOM.upload.addEventListener('change', (e) => handleFile(e.target.files[0]));
         DOM.dropZone.addEventListener('dragover', e => { e.preventDefault(); DOM.overlay.style.borderColor = "#7b2cbf"; });
         DOM.dropZone.addEventListener('dragleave', e => { DOM.overlay.style.borderColor = "var(--accent-primary)"; });
         DOM.dropZone.addEventListener('drop', e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); });
         DOM.overlay.addEventListener('click', () => DOM.upload.click());
 
-        // Range Value Updates & Debounced Processing
         ['thresh', 'smooth', 'simp'].forEach(id => {
             DOM[id].addEventListener('input', (e) => {
                 DOM['val' + id.charAt(0).toUpperCase() + id.slice(1)].innerText = e.target.value;
@@ -448,11 +483,10 @@
             DOM[id].addEventListener('change', triggerProcess);
         });
         
-        ['detail', 'invert', 'rmsmall', 'holes'].forEach(id => {
+        ['detail', 'invert', 'holes'].forEach(id => {
             DOM[id].addEventListener('change', triggerProcess);
         });
 
-        // Tabs
         DOM.tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 DOM.tabs.forEach(t => t.classList.remove('active'));
@@ -493,39 +527,57 @@
 
         function triggerProcess() {
             if(!sourceImage) return;
-            setStatus('Tracing Paths...', true);
-            
-            // Debounce logic to prevent UI freeze during slider drag
+            setStatus('Tracing Geometry...', true);
             clearTimeout(processTimeout);
-            processTimeout = setTimeout(() => {
-                executeAutoTraceEngine();
-            }, 100);
+            processTimeout = setTimeout(() => { executeAutoTrace(); }, 150);
         }
 
-        function executeAutoTraceEngine() {
-            // 1. Prepare controls
+        // Parse and offset SVG coordinates because Alight Motion centers items based on <location>
+        function offsetSVGPath(dString, offsetX, offsetY) {
+            // Match commands and coordinate numbers
+            let tokens = dString.match(/[a-zA-Z]+|[-]?\d+(\.\d+)?/g);
+            if (!tokens) return dString;
+            
+            let result = [];
+            let i = 0;
+            while (i < tokens.length) {
+                let token = tokens[i];
+                if (/[a-zA-Z]/.test(token)) {
+                    result.push(token);
+                    i++;
+                } else {
+                    // X Y pairs
+                    let x = parseFloat(tokens[i]) + offsetX;
+                    let y = parseFloat(tokens[i+1]) + offsetY;
+                    result.push(x.toFixed(2));
+                    result.push(y.toFixed(2));
+                    i += 2;
+                }
+            }
+            return result.join(" ");
+        }
+
+        function executeAutoTrace() {
             const threshold = parseInt(DOM.thresh.value);
             const invert = DOM.invert.checked;
             const detail = DOM.detail.value;
-            const smoothness = parseInt(DOM.smooth.value); // 0-100
-            const simp = parseInt(DOM.simp.value); // 0-100
-            const rmSmall = DOM.rmsmall.checked;
+            const smoothness = parseInt(DOM.smooth.value); 
+            const simp = parseInt(DOM.simp.value); 
             const preserveHoles = DOM.holes.checked;
 
-            // 2. Build Binary Mask on Canvas (Client-side Foreground separation)
+            // 1. Generate Binary Mask
             const ctx = DOM.canvasMask.getContext('2d');
             ctx.drawImage(sourceImage, 0, 0);
             const imgData = ctx.getImageData(0, 0, originalWidth, originalHeight);
             const data = imgData.data;
 
-            const fgColor = {r: 255, g: 255, b: 255, a: 255}; // White is subject
-            const bgColor = {r: 0, g: 0, b: 0, a: 255};       // Black is background
+            const fgColor = {r: 255, g: 255, b: 255, a: 255};
+            const bgColor = {r: 0, g: 0, b: 0, a: 255};
 
             for (let i = 0; i < data.length; i += 4) {
-                // Calculate luminance
                 const luma = (data[i]*0.299 + data[i+1]*0.587 + data[i+2]*0.114);
                 let isFg = luma >= threshold;
-                if(data[i+3] < 128) isFg = false; // Alpha transparency check
+                if(data[i+3] < 128) isFg = false;
                 if(invert) isFg = !isFg;
 
                 if (isFg) {
@@ -536,119 +588,115 @@
             }
             ctx.putImageData(imgData, 0, 0);
 
-            // 3. Map Settings to ImageTracer
-            // Map Smoothness (0-100) -> blurradius (0 to 2) and curve tolerance (ltres/qtres)
+            // 2. Trace parameters mapping
             const blurRad = (smoothness > 75) ? 2 : (smoothness > 40 ? 1 : 0);
-            
-            // Detail Mapping
             let ltres = 1, qtres = 1;
             if(detail === 'low') { ltres = 2.0; qtres = 2.0; }
             else if(detail === 'high') { ltres = 0.1; qtres = 0.1; }
             
-            // Map Simplification -> pathomit (drops paths with small area) and straight-line tolerance
-            let pathOmit = rmSmall ? (simp / 100 * 30 + 4) : 0; // Drop 4 to 34 pixel areas if rmSmall is on
+            const pathOmit = simp > 0 ? (simp / 100 * 30 + 4) : 0;
             
             const options = {
-                ltres: ltres,
-                qtres: qtres,
-                pathomit: pathOmit,
-                colorsampling: 0,
-                numberofcolors: 2,
-                mincolorratio: 0,
-                colorquantcycles: 1,
-                blurradius: blurRad,
-                blurdelta: 20,
-                stroke: 0,
-                pal: [{r:0,g:0,b:0,a:255}, {r:255,g:255,b:255,a:255}], // Lock palette to pure B&W
-                layering: 0 // Sequential layering
+                ltres: ltres, qtres: qtres, pathomit: pathOmit,
+                colorsampling: 0, numberofcolors: 2, mincolorratio: 0, colorquantcycles: 1,
+                blurradius: blurRad, blurdelta: 20, stroke: 0, layering: 0,
+                pal: [{r:0,g:0,b:0,a:255}, {r:255,g:255,b:255,a:255}]
             };
 
-            // 4. Execute Real Trace
-            const svgString = ImageTracer.imagedataToSVG(imgData, options);
-            
-            // 5. Parse Geometry and Build Final Compound Path
-            extractGeometricPaths(svgString, preserveHoles);
-            
-            updateViewerLayout();
-            setStatus('Engine Ready', false);
-        }
+            // 3. Perform Tracing
+            const rawSVGString = ImageTracer.imagedataToSVG(imgData, options);
 
-        function extractGeometricPaths(rawSVG, preserveHoles) {
+            // 4. Extract Path Data
             const parser = new DOMParser();
-            const svgDoc = parser.parseFromString(rawSVG, "image/svg+xml");
+            const svgDoc = parser.parseFromString(rawSVGString, "image/svg+xml");
             const paths = svgDoc.getElementsByTagName('path');
             
             let fgPaths = [];
             let bgPaths = [];
 
-            // Sort paths by color
             for(let p of paths) {
                 const fill = p.getAttribute('fill');
                 const d = p.getAttribute('d');
                 if(!d) continue;
                 
-                // Estimate area strictly by bounding box size of the path string 
-                // (ImageTracer puts largest backgrounds first natively in layering:0, but we can double check)
-                if(fill === 'rgb(255,255,255)') {
-                    fgPaths.push(d);
-                } else if(fill === 'rgb(0,0,0)') {
-                    bgPaths.push(d);
-                }
+                if(fill === 'rgb(255,255,255)') fgPaths.push(d);
+                else if(fill === 'rgb(0,0,0)') bgPaths.push(d);
             }
 
-            let compoundD = "";
+            let standardD = "";
+            if(fgPaths.length > 0) standardD += fgPaths.join(" ") + " ";
             
-            // Combine all foreground blobs
-            if(fgPaths.length > 0) {
-                compoundD += fgPaths.join(" ") + " ";
-            }
-
-            // To preserve holes correctly, we inject the background paths (excluding the main outer background).
-            // ImageTracer generates the main background as the very first path, so we skip index 0.
+            // Subpaths for holes
             if(preserveHoles && bgPaths.length > 1) {
-                // Drop the main background (index 0) and append the rest as internal hole cutouts
-                bgPaths.shift(); 
-                compoundD += bgPaths.join(" ");
+                bgPaths.shift(); // Drop main canvas background
+                standardD += bgPaths.join(" ");
             }
 
-            // Cleanup string
-            generatedSVGPath = compoundD.trim();
+            const cleanStandardD = standardD.trim() || "M 0 0";
 
-            if(!generatedSVGPath) {
-                generatedSVGPath = "M 0 0"; // Fallback to prevent crash
-            }
+            // 5. Compute Alight Motion Centered Path
+            // AM uses center of composition as 0,0 for standard transform locations.
+            // ImageTracer generates paths relative to top-left 0,0.
+            const amOffsetX = -(originalWidth / 2);
+            const amOffsetY = -(originalHeight / 2);
+            const amPathD = offsetSVGPath(cleanStandardD, amOffsetX, amOffsetY);
 
-            // 6. Generate Outputs
-            // For proper hole rendering, SVG requires fill-rule="evenodd" when combining positive and negative paths in one string.
-            
-            finalSVGData = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${originalWidth} ${originalHeight}" width="100%" height="100%">
-    <path d="${generatedSVGPath}" fill="var(--accent-primary)" fill-rule="evenodd" />
+            // Output Definitions
+            finalSVGString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${originalWidth} ${originalHeight}" width="100%" height="100%">
+    <path d="${cleanStandardD}" fill="#ffffff" fill-rule="evenodd" stroke="none" />
 </svg>`;
 
-            // Pure Output SVG for Download
-            const downloadSVGStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${originalWidth} ${originalHeight}" width="100%" height="100%">
-    <path d="${generatedSVGPath}" fill="#ffffff" fill-rule="evenodd" stroke="none" />
-</svg>`;
-            
-            // Generate Alight Motion XML
-            // AM natively understands standard SVG path data format
-            finalXMLData = `<?xml version="1.0" encoding="UTF-8"?>
-<alightmotion>
-    <scene id="rapipp_auto_trace">
-        <element type="shape" name="Traced_Vector_Mask">
-            <transform scale="1.0" rotation="0.0" />
-            <shape>
-                <path d="${generatedSVGPath}" fill="#ffffff" stroke="none" fill-rule="evenodd" />
-            </shape>
-        </element>
-    </scene>
-</alightmotion>`;
+            // Inject for preview rendering (Preview SVG always uses pure white fill for vector mode per instructions)
+            DOM.svgCont.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${originalWidth} ${originalHeight}" width="100%" height="100%">
+                <path d="${cleanStandardD}" fill="#ffffff" fill-rule="evenodd" />
+            </svg>`;
 
-            // Inject to DOM
-            DOM.svgCont.innerHTML = finalSVGData;
-            
-            // Store raw for downloader
-            DOM.svgCont.dataset.raw = downloadSVGStr;
+            // AM 5.0 Specific Format Structure exactly as provided
+            // Generates an exact clone of the structure requested
+            finalXMLString = `<?xml version='1.0' encoding='UTF-8' ?>
+<scene
+    title="Rapipp Auto Trace"
+    width="${originalWidth}"
+    height="${originalHeight}"
+    exportWidth="${originalWidth}"
+    exportHeight="${originalHeight}"
+    precompose="dynamicResolution"
+    bgcolor="#ff000000"
+    totalTime="5000"
+    fps="30"
+    modifiedTime="0"
+    amver="1028425"
+    ffver="106"
+    am="com.alightcreative.motion/5.0.273.1028425"
+    amplatform="android"
+    retime="freeze"
+    retimeAdaptFPS="false">
+
+    <shape
+        id="${Date.now()}"
+        label="Vector Shape"
+        startTime="0"
+        endTime="5000"
+        fillType="color"
+        mediaFillMode="fill">
+
+        <transform>
+            <location value="${(originalWidth/2).toFixed(6)},${(originalHeight/2).toFixed(6)},0.000000" />
+        </transform>
+
+        <!-- Neutral white color per requirement -->
+        <fillColor value="#ffffffff" />
+
+        <path d="${amPathD}" />
+
+    </shape>
+
+</scene>`;
+
+            DOM.xmlOutput.value = finalXMLString;
+
+            updateViewerLayout();
+            setStatus('Engine Ready', false);
         }
 
         function updateViewerLayout() {
@@ -658,16 +706,18 @@
             const resContainer = document.getElementById('view-result');
             const svgEl = DOM.svgCont.querySelector('svg');
             
-            // Reset styles
+            // Reset state
             DOM.viewer.className = "viewer";
-            DOM.canvasMask.style.display = 'none';
             DOM.svgCont.style.display = 'none';
             origContainer.style.display = 'none';
             resContainer.style.display = 'none';
+            DOM.xmlBox.style.display = 'none';
+            DOM.viewer.style.display = 'flex';
+
             if(svgEl) {
-                svgEl.style.fill = 'var(--accent-primary)';
-                svgEl.style.opacity = '1';
-                svgEl.querySelector('path').setAttribute('fill', 'var(--accent-primary)');
+                // Keep SVG pure geometry white
+                svgEl.querySelector('path').setAttribute('fill', '#ffffff');
+                svgEl.querySelector('path').removeAttribute('stroke');
             }
 
             if(viewMode === 'sbs') {
@@ -684,33 +734,39 @@
                 resContainer.style.width = '100%'; resContainer.style.height = '100%';
                 
                 DOM.svgCont.style.display = 'flex';
-                // Style for overlay (Stroke only, transparent fill)
+                
                 if(svgEl) {
-                    svgEl.querySelector('path').setAttribute('fill', 'rgba(76, 201, 240, 0.4)');
-                    svgEl.querySelector('path').setAttribute('stroke', '#4cc9f0');
+                    svgEl.querySelector('path').setAttribute('fill', 'rgba(255, 255, 255, 0.2)');
+                    svgEl.querySelector('path').setAttribute('stroke', '#ffffff');
                     svgEl.querySelector('path').setAttribute('stroke-width', '2');
                 }
             }
-            else if (viewMode === 'mask') {
-                resContainer.style.display = 'flex';
-                DOM.canvasMask.style.display = 'block';
-                DOM.canvasMask.style.width = '100%';
-                DOM.canvasMask.style.height = '100%';
-                DOM.canvasMask.style.objectFit = 'contain';
+            else if (viewMode === 'xml') {
+                DOM.viewer.style.display = 'none';
+                DOM.xmlBox.style.display = 'flex';
             }
         }
 
-        // Export Functions
+        function copyXML() {
+            if(!finalXMLString) return;
+            navigator.clipboard.writeText(finalXMLString);
+            
+            const btn = document.querySelector('.xml-preview-container .btn');
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> Copied`;
+            setTimeout(() => { btn.innerHTML = oldHtml; }, 2000);
+        }
+
         function downloadSVG() {
-            if(!finalSVGData) return alert("Upload and trace an image first.");
-            const blob = new Blob([DOM.svgCont.dataset.raw], { type: 'image/svg+xml' });
-            triggerDownload(blob, 'Rapipp_Trace.svg');
+            if(!finalSVGString) return alert("Please upload and trace an image first.");
+            const blob = new Blob([finalSVGString], { type: 'image/svg+xml' });
+            triggerDownload(blob, 'Rapipp_Traced.svg');
         }
 
         function downloadXML() {
-            if(!finalXMLData) return alert("Upload and trace an image first.");
-            const blob = new Blob([finalXMLData], { type: 'text/xml' });
-            triggerDownload(blob, 'Rapipp_Mask_AM.xml');
+            if(!finalXMLString) return alert("Please upload and trace an image first.");
+            const blob = new Blob([finalXMLString], { type: 'text/xml' });
+            triggerDownload(blob, 'Rapipp_Project_AM.xml');
         }
 
         function triggerDownload(blob, filename) {
